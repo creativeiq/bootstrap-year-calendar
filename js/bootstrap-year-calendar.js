@@ -55,7 +55,10 @@
 				contextMenuItems: opt.contextMenuItems instanceof Array ? opt.contextMenuItems : [],
 				customDayRenderer : $.isFunction(opt.customDayRenderer) ? opt.customDayRenderer : null,
 				customDataSourceRenderer : $.isFunction(opt.customDataSourceRenderer) ? opt.customDataSourceRenderer : null,
-				weekStart: !isNaN(parseInt(opt.weekStart)) ? parseInt(opt.weekStart) : null
+				weekStart: !isNaN(parseInt(opt.weekStart)) ? parseInt(opt.weekStart) : null,
+				numberOfMonths: !isNaN(parseInt(opt.numberOfMonths)) ? parseInt(opt.numberOfMonths) : 12,
+				startMonth: !isNaN(parseInt(opt.startMonth)) && parseInt(opt.startMonth) < 12 ? parseInt(opt.startMonth) : 0,
+				monthContainerClass: opt.monthContainerClass || null
 			};
 			
 			this._initializeDatasourceColors();
@@ -181,15 +184,24 @@
 		},
 		_renderBody: function() {
 			var monthsDiv = $(document.createElement('div'));
-			monthsDiv.addClass('months-container');
+			monthsDiv.addClass('months-container clearfix');
 			
-			for(var m = 0; m < 12; m++) {
+			for(var i = 0; i < this.options.numberOfMonths; i++) {
+
+				/* Month and year */
+				var m = (this.options.startMonth + i) % 12;
+				var y = this.options.startYear + Math.floor((this.options.startMonth + i) / 12);
+
 				/* Container */
 				var monthDiv = $(document.createElement('div'));
-				monthDiv.addClass('month-container');
+				monthDiv.addClass('month-container' + (!!this.options.monthContainerClass ? ' ' + this.options.monthContainerClass: ''));
 				monthDiv.data('month-id', m);
-				
-				var firstDate = new Date(this.options.startYear, m, 1);
+				monthDiv.data('year-id', y);
+
+				var firstDate = new Date(y, m, 1);
+
+				var tableWrap = $(document.createElement('div'));
+				tableWrap.addClass('month-wrap');
 				
 				var table = $(document.createElement('table'));
 				table.addClass('month');
@@ -241,7 +253,7 @@
 				
 				/* Days */
 				var currentDate = new Date(firstDate.getTime());
-				var lastDate = new Date(this.options.startYear, m + 1, 0);
+				var lastDate = new Date(y, m + 1, 0);
 				
 				while(currentDate.getDay() != weekStart)
 				{
@@ -283,7 +295,7 @@
 							cellContent.addClass('day-content');
 							cellContent.text(currentDate.getDate());
 							cell.append(cellContent);
-							
+
 							if(this.options.customDayRenderer) {
 								this.options.customDayRenderer(cellContent, currentDate);
 							}
@@ -297,8 +309,10 @@
 					
 					table.append(row);
 				}
+
+				tableWrap.append(table);
 				
-				monthDiv.append(table);
+				monthDiv.append(tableWrap);
 				
 				monthsDiv.append(monthDiv);
 			}
@@ -310,9 +324,10 @@
 			if(this.options.dataSource != null && this.options.dataSource.length > 0) {
 				this.element.find('.month-container').each(function() {
 					var month = $(this).data('month-id');
-					
-					var firstDate = new Date(_this.options.startYear, month, 1);
-					var lastDate = new Date(_this.options.startYear, month + 1, 1);
+					var year = $(this).data('year-id');
+
+					var firstDate = new Date(year, month, 1);
+					var lastDate = new Date(year, month + 1, 1);
 					
 					if((_this.options.minDate == null || lastDate > _this.options.minDate) && (_this.options.maxDate == null || firstDate <= _this.options.maxDate))
 					{
@@ -326,8 +341,8 @@
 						
 						if(monthData.length > 0) {
 							$(this).find('.day-content').each(function() {
-								var currentDate = new Date(_this.options.startYear, month, $(this).text());
-								var nextDate = new Date(_this.options.startYear, month, currentDate.getDate() + 1);
+								var currentDate = new Date(year, month, $(this).text());
+								var nextDate = new Date(year, month, currentDate.getDate() + 1);
 								
 								var dayData = [];
 								
@@ -611,30 +626,31 @@
 			});
 			
 			/* Responsive management */
-			
-			setInterval(function() {
-				var calendarSize = $(_this.element).width();
-				var monthSize = $(_this.element).find('.month').first().width() + 10;
-				var monthContainerClass = 'month-container';
-				
-				if(monthSize * 6 < calendarSize) {
-					monthContainerClass += ' col-xs-2';
-				}
-				else if(monthSize * 4 < calendarSize) {
-					monthContainerClass += ' col-xs-3';
-				}
-				else if(monthSize * 3 < calendarSize) {
-					monthContainerClass += ' col-xs-4';
-				}
-				else if(monthSize * 2 < calendarSize) {
-					monthContainerClass += ' col-xs-6';
-				}
-				else {
-					monthContainerClass += ' col-xs-12';
-				}
-				
-				$(_this.element).find('.month-container').attr('class', monthContainerClass);
-			}, 300);
+			if (!this.options.monthContainerClass) {
+				setInterval(function() {
+					var calendarSize = $(_this.element).width();
+					var monthSize = $(_this.element).find('.month').first().width() + 10;
+					var monthContainerClass = 'month-container';
+
+					if(monthSize * 6 < calendarSize) {
+						monthContainerClass += ' col-xs-2';
+					}
+					else if(monthSize * 4 < calendarSize) {
+						monthContainerClass += ' col-xs-3';
+					}
+					else if(monthSize * 3 < calendarSize) {
+						monthContainerClass += ' col-xs-4';
+					}
+					else if(monthSize * 2 < calendarSize) {
+						monthContainerClass += ' col-xs-6';
+					}
+					else {
+						monthContainerClass += ' col-xs-12';
+					}
+
+					$(_this.element).find('.month-container').attr('class', monthContainerClass);
+				}, 300);
+			}
 		},
 		_refreshRange: function () {
 			var _this = this;
@@ -767,7 +783,7 @@
 		_getDate: function(elt) {
 			var day = elt.children('.day-content').text();
 			var month = elt.closest('.month-container').data('month-id');
-			var year = this.options.startYear;
+			var year = elt.closest('.month-container').data('year-id');
 
 			return new Date(year, month, day);
 		},
@@ -1092,7 +1108,7 @@
 		en: {
 			days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 			daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-			daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+			daysMin: ["S", "M", "T", "W", "T", "F", "S", "S"],
 			months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
 			monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 			weekShort: 'W',
