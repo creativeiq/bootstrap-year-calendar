@@ -667,7 +667,8 @@
 
                 this.element.find('.month-container').each(function () {
 					var monthId = $(this).data('month-id');
-                    if (minDate.getMonth() <= monthId && maxDate.getMonth() >= monthId) {
+					var yearId = $(this).data('year-id');
+                    if ((minDate.getMonth() <= monthId || minDate.getFullYear() < yearId) && (maxDate.getMonth() >= monthId || maxDate.getFullYear() > yearId)) {
                         $(this).find('td.day:not(.old, .new)').each(function () {
                             var date = _this._getDate($(this));
                             if (date >= minDate && date <= maxDate) {
