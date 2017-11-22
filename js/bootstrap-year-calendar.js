@@ -58,7 +58,8 @@
 				weekStart: !isNaN(parseInt(opt.weekStart)) ? parseInt(opt.weekStart) : null,
 				numberOfMonths: !isNaN(parseInt(opt.numberOfMonths)) ? parseInt(opt.numberOfMonths) : 12,
 				startMonth: !isNaN(parseInt(opt.startMonth)) && parseInt(opt.startMonth) < 12 ? parseInt(opt.startMonth) : 0,
-				monthContainerClass: opt.monthContainerClass || null
+				monthContainerClass: opt.monthContainerClass || null,
+				fadeOnRefresh: opt.fadeOnRefresh != null ? opt.fadeOnRefresh : true,
 			};
 			
 			this._initializeDatasourceColors();
@@ -94,7 +95,10 @@
 			this._renderDataSource();
 			
 			this._applyEvents();
-			this.element.find('.months-container').fadeIn(500);
+
+			if (this.options.fadeOnRefresh) {
+				this.element.find('.months-container').fadeIn(500);
+			}
 			
 			this._triggerEvent('renderEnd', { currentYear: this.options.startYear });
 		},
