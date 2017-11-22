@@ -98,6 +98,8 @@
 
 			if (this.options.fadeOnRefresh) {
 				this.element.find('.months-container').fadeIn(500);
+			} else {
+				this.element.find('.months-container').show();
 			}
 			
 			this._triggerEvent('renderEnd', { currentYear: this.options.startYear });
