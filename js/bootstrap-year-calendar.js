@@ -60,6 +60,7 @@
 				startMonth: !isNaN(parseInt(opt.startMonth)) && parseInt(opt.startMonth) < 12 ? parseInt(opt.startMonth) : 0,
 				monthContainerClass: opt.monthContainerClass || null,
 				fadeOnRefresh: opt.fadeOnRefresh != null ? opt.fadeOnRefresh : true,
+				displayYearInMonthTitle: opt.displayYearInMonthTitle != null ? opt.displayYearInMonthTitle : false,
 			};
 			
 			this._initializeDatasourceColors();
@@ -218,9 +219,15 @@
 				var titleRow = $(document.createElement('tr'));
 				
 				var titleCell = $(document.createElement('th'));
+
+				var titleText = dates[this.options.language].months[m];
+				if (this.options.displayYearInMonthTitle) {
+					titleText += ' <span class="year">' + y + '</span>';
+				}
+
 				titleCell.addClass('month-title');
 				titleCell.attr('colspan', this.options.displayWeekNumber ? 8 : 7);
-				titleCell.text(dates[this.options.language].months[m]);
+				titleCell.html(titleText);
 				
 				titleRow.append(titleCell);
 				thead.append(titleRow);
